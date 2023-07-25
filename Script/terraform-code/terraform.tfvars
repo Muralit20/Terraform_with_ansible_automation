@@ -1,0 +1,17 @@
+aws_profile = "devops"
+aws_region  = "ap-southeast-1"
+vpc_cidr    = "10.0.0.0/16"
+subnet_cidr = {
+  public1  = "10.0.1.0/24"
+  public2  = "10.0.2.0/24"
+  private = "10.0.3.0/24"
+  rds1    = "10.0.4.0/24"
+  rds2    = "10.0.5.0/24"
+}
+database_name = "devopsdb"
+database_user = "devops"
+database_password = "D-,B9hs!x8;pE?cn"
+rds_instance_identifier = "dev-mysql"
+dev_ami = "ami-063e3af9d2cc7fe94"
+key_name = "Master"
+bucket_name = "devcodesbucket"

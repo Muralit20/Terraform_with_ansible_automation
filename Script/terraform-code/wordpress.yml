@@ -1,0 +1,47 @@
+---
+- hosts: prod
+  become: yes
+  remote_user: ansible
+  tasks:
+    - name: Install Apache.
+      apt: name={{ item }} state=present
+      sudo: yes
+      with_items:
+        - apache2
+        - php
+        - php-mysql
+    - name: Download WordPress
+      get_url: url=http://wordpress.org/wordpress-latest.tar.gz dest=/var/www/html/wordpress.tar.gz force=yes
+    - shell:
+        cmd: rm index.html
+        chdir: /var/www/html/
+    - name: Extract WordPress
+      command: "tar xzf /var/www/html/wordpress.tar.gz -C /var/www/html --strip-components 1"
+    - shell:
+        cmd: cp wp-config-sample.php wp-config.php
+        chdir: /var/www/html/
+    - name: Update database_name
+      command: sed -i 's/database_name_here/devopsdb/g' /var/www/html/wp-config.php
+    - name: Update username
+      command: sed -i 's/username_here/devops/g' /var/www/html/wp-config.php
+    - name: Update password
+      command: sed -i 's/password_here/D-,B9hs!x8;pE?cn/g' /var/www/html/wp-config.php
+    - name: Update Rds_endpoint
+      command: sed -i 's/localhost/{{ rdsendpoint }}/g' /var/www/html/wp-config.php
+    - user: name=apache
+    - name: Make my directory tree readable
+      file:
+        path: /var/www/html/
+        mode: u=rwX,g=rX,o=rX
+        recurse: yes
+        owner: apache
+        group: apache
+    - name: Make sure Apache is started now and at boot.
+      service: name=apache2 state=started enabled=yes
+    - name: Update S3 code bucket
+      command: aws s3 sync /var/www/html/ s3://{{ s3code }}/ --delete
+    - shell:
+        cmd: touch root
+        chdir: /var/spool/cron/
+    - name: sync S3 code bucket
+      command: echo '*/5 * * * * aws s3 sync s3://{{ s3code }} /var/www/html/' >> /var/spool/cron/root

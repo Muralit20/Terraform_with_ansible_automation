@@ -1,0 +1,35 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - apt-get update
+      - apt install wget unzip curl python-pip ansible -y
+      - apt install sshpass -y
+      - pip install boto3
+      - pip install awscli --upgrade 
+      - sed -i 's/#host_key_checking/host_key_checking/g' /etc/ansible/ansible.cfg
+      - wget https://releases.hashicorp.com/terraform/0.10.4/terraform_0.10.4_linux_amd64.zip
+      - unzip terraform_0.10.4_linux_amd64.zip
+      - mv terraform /bin
+      - rm terraform_0.10.4_linux_amd64.zip
+      - apt-get update
+      - mkdir -p ~/.aws
+      - cp aws_credentials/* ~/.aws/
+      - chmod 600 ~/.aws/*
+      - cd terraform-code
+      - terraform init
+      - terraform plan 
+      - |
+       if [ "$Execution_plan" = "apply" ]; then
+            terraform $Execution_plan -auto-approve
+       fi
+      - |
+       if [ "$Execution_plan" = "destroy" ]; then
+            terraform $Execution_plan -force
+       fi
+build:
+  commands:
+    - echo "build success"
+post_build:
+  commands:
+    - echo "Nothing to do in the post_build for now"
